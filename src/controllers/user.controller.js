@@ -18,6 +18,12 @@ const registerUser = asyncHandler(async (req , res) => {
         throw new ApiError(400 , "Email Already Exist")
     } 
 
+    const token = await userModel.generateAuthToken();
+
+    if (!token) {
+        throw new ApiError(500 , "Something went wrong while generating the token.");
+    }
+    
     const user = await userModel.create({
         firstName,
         lastName,
@@ -35,6 +41,8 @@ const registerUser = asyncHandler(async (req , res) => {
     if (!userData) {
         throw new ApiError(500 , "User Data not found in the Database.");
     }
+
+    userData.token = token;
 
     return res
     .status(201)
