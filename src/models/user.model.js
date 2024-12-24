@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
         trim : true
     },
 
+    accessToken : {
+        type : String,
+    },
+
     socketId : {}
 } , {});
 
