@@ -10,6 +10,12 @@ Endpoint for creating new user accounts in the system.
 - **Method**: `POST`
 - **Content-Type**: `application/json`
 
+## Data Validation Rules
+- **firstName:** `String, required`
+- **lastName:** `String, optional`
+- **email:** `String, required, must be unique`
+- **password:** `String, required`
+
 ### Request Body
 
 ```json
@@ -64,22 +70,3 @@ Status Code: 500 Internal Server Error
     "message": "Something went wrong while creating the user.",
     "success": false
 }
-
-Data Validation Rules
-firstName: String, required
-lastName: String, optional
-email: String, required, must be unique
-password: String, required
-Automatically hashed using bcrypt
-Salt rounds: 10
-Security Notes
-Passwords are hashed using bcrypt before storage
-Email addresses must be unique in the system
-Response never includes the password field
-All string fields are trimmed before saving
-
-Security Notes
-Passwords are hashed using bcrypt before storage
-Email addresses must be unique in the system
-Response never includes the password field
-All string fields are trimmed before saving
