@@ -70,3 +70,5 @@ Status Code: 500 Internal Server Error
     "message": "Something went wrong while creating the user.",
     "success": false
 }
+```
+TESTING
