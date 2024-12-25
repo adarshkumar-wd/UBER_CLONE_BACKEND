@@ -3,6 +3,7 @@ import { asyncHandler } from "../asyncHandler/asyncsHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import {ApiError} from "../utils/ApiError.js"
 import { generateAccessAndRefreshToken } from "../utils/generateTokens.js";
+import jwt from "jsonwebtoken"
 
 const registerUser = asyncHandler(async (req , res) => {
 
@@ -105,9 +106,73 @@ const loginUser = asyncHandler(async (req , res) => {
 
 })
 
+const refreshAccessToken = asyncHandler(async (req , res) => {
+
+    const inCommingTokens = req.body.cookie || req.header().Authorization.split(" ")[1]
+
+    if (!inCommingTokens) {
+        throw new ApiError(401 , "Tokens Not Found.")
+    }
+
+    try {
+
+        const decodedToken = jwt.verify(inCommingTokens , process.env.REFRESH_TOKEN_SECRET);
+
+        if (!decodedToken) {
+            throw new ApiError(402 , "Invalid Token.");
+        }
+
+        const user = await userModel.findById(decodedToken?._id);
+
+        if (!user) {
+            throw new ApiError(402 , "Invalid Token")
+        }
+
+        if (inCommingTokens !== user?.refreshToken) {
+            throw new ApiError(402 , "Invalid user Found.")
+        }
+
+        const {accessToken , refreshToken : newRefreshToken} = await generateAccessAndRefreshToken(user._id);
+
+        if (!accessToken || !newRefreshToken) {
+            throw new ApiError(500 , "Something went wrong while generating the tokens.");
+        }
+
+        const option = {
+            httpOnly : true,
+            secure : process.env.NODE_ENV === "production",
+        }
+
+        user.refreshToken = newRefreshToken
+
+        user.save({validateBeforeSave : false});
+
+        return res
+        .status(200)
+        .cookie("accessToken" , accessToken , option)
+        .cookie("refreshToken" , newRefreshToken , option)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    accessToken,
+                    refreshToken : newRefreshToken
+                },
+                "Tokens Generated Sucessfully."
+            )
+        )
+        
+    } catch (error) {
+        throw new ApiError(500 , error?.message || "Something went wrong while Generating the tokens.");
+    }
+
+
+})
+
 
 
 export {
     registerUser,
-    loginUser
+    loginUser,
+    refreshAccessToken
 }
