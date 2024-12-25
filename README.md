@@ -71,7 +71,7 @@ Status Code: 500 Internal Server Error
     "success": false
 }
 ```
-## User Registration API
+## User Login API
 
 Endpoint for Log In the User.
 
@@ -89,15 +89,15 @@ Endpoint for Log In the User.
 
 ```json
 {
-    "email": "john@example.com", // Required, must be unique
-    "password": "password123"    // Required, will be hashed
+    "email": "john@example.com",
+    "password": "password123"    
 }
 
 Success Response
-Status Code: 201 Created
+Status Code: 201 Logged In
 
 {
-    "statusCode": 200,
+    "statusCode": 201,
    { 
     "data": {
         "_id": "user_id",
