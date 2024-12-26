@@ -12,7 +12,7 @@ export const authUser = asyncHandler(async (req , res , next) => {
     }
 
     try {
-        const decoded = jwt.verify(token , process.env.ACCESS_TOKEN_SECRET);
+        const decoded = jwt.verify(token , process.env.USER_ACCESS_TOKEN_SECRET);
 
         if (!decoded) {
             return next(new ApiError(401 , "Not Authorized to access this route."));

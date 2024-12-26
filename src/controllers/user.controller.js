@@ -116,7 +116,7 @@ const refreshAccessToken = asyncHandler(async (req , res) => {
 
     try {
 
-        const decodedToken = jwt.verify(inCommingTokens , process.env.REFRESH_TOKEN_SECRET);
+        const decodedToken = jwt.verify(inCommingTokens , process.env.USER_REFRESH_TOKEN_SECRET);
 
         if (!decodedToken) {
             throw new ApiError(402 , "Invalid Token.");
