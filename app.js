@@ -19,10 +19,12 @@ app.use(cookieParser())
 // Routes...
 
 import userRouter from "./src/routes/user.route.js"
+import captainRouter from "./src/routes/captain.route.js"
 
 // Routes Decleration... 
 
 app.use("/api/v1/users" , userRouter);
+app.use("/api/v1/captains" , captainRouter);
 
 
 app.get("/" , (req , res) => res.send("Hello world"));

@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 
 const captainsSchema = new mongoose.Schema({
 
-    fullname: {
+    fullName: {
         firstName : {
             type : String,
             required : [true , "First Name is Required."],
