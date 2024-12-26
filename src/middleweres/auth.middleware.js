@@ -18,7 +18,7 @@ export const authUser = asyncHandler(async (req , res , next) => {
             return next(new ApiError(401 , "Not Authorized to access this route."));
         }
 
-        const user = await userModel.findById(decoded?._id);
+        const user = await userModel.findById(decoded?._id).select("-password -refreshToken");
 
         if (!user) {
             return next(new ApiError(404 , "No user found with this Id."));
