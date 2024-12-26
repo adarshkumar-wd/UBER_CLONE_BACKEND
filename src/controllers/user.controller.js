@@ -169,10 +169,40 @@ const refreshAccessToken = asyncHandler(async (req , res) => {
 
 })
 
+const logoutUser = asyncHandler(async (req , res) => {
+
+    const user = req?.user;
+
+    if (!user) {
+        throw new ApiError(401 , "UnAuthorized User.");
+    }
+
+    user.refreshToken = undefined;
+    user.save({validateBeforeSave : false});
+    const option = {
+        httpOnly : true,
+        secure : process.env.NODE_ENV === "production",
+    }
+
+    return res
+       .status(200)
+         .clearCookie("accessToken" , option)
+            .clearCookie("refreshToken" , option)
+                .json(
+                    new ApiResponse(
+                        200,
+                        {},
+                        "User Logged Out Successfully."
+                    )
+                )
+
+});
+
 
 
 export {
     registerUser,
     loginUser,
-    refreshAccessToken
+    refreshAccessToken,
+    logoutUser
 }
