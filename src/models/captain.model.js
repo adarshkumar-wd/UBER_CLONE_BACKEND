@@ -67,19 +67,11 @@ captainsSchema.pre("save" , async function(next) {
         next();
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(this.password , salt);
-
-    if (!hashedPassword) {
-        throw new Error("Something went wrong while hashing the password.");
-    }
-
-    return hashedPassword;
+    this.password =  await bcrypt.hash(this.password , 10);
 });
 
 captainsSchema.methods.isPasswordCorrect = async function(password) {
     try {
-
         return await bcrypt.compare(password , this.password);
 
     } catch (error) {
@@ -92,7 +84,7 @@ captainsSchema.methods.generateAccessToken = function() {
 };
 
 captainsSchema.methods.generateRefreshToken = function() {
-    return jwt.sign({ _id : this._id } , process.env.CAPTAIN_REFRESH_TOKEN_SECRET , { expiresIn : CAPTAIN_REFRESH_TOKEN_EXPIRY });
+    return jwt.sign({ _id : this._id } , process.env.CAPTAIN_REFRESH_TOKEN_SECRET , { expiresIn : process.env.CAPTAIN_REFRESH_TOKEN_EXPIRY });
 };
 
 export const captainModel = mongoose.model("captain" , captainsSchema);
