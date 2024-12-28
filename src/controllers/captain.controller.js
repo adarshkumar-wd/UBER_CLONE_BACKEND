@@ -187,8 +187,38 @@ const refreshAccessToken = asyncHandler(async (req , res) => {
 
 });
 
+const logoutCaptain = asyncHandler(async (req , res) => {
+
+    const captain = req?.captain ;
+
+    if (!captain) {
+        throw new ApiError(401 , "unAuthorized captain.");
+    }
+
+    captain.refreshToken = undefined;
+
+    const options = {
+        httpOnly : true,
+        secure : process.env.NODE_ENV === "development"
+    }
+
+    return res
+     .status(200)
+     .clearCookie("accessToken" , options)
+     .clearCookie("refreshToken" , options)
+     .json(
+        new ApiResponse(
+            200,
+            {},
+            "Captain Logged Out Successfully."
+        )
+     )
+
+});
+
 export {
     registerCaptain,
     loginCaptain,
-    refreshAccessToken
+    refreshAccessToken,
+    logoutCaptain
 };

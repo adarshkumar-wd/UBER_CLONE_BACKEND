@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { body } from "express-validator";
-import { loginCaptain, registerCaptain } from "../controllers/captain.controller.js";
+import { loginCaptain, registerCaptain , logoutCaptain } from "../controllers/captain.controller.js";
+import {authCaptain} from "../middleweres/captainAuth.middleware.js";
 
 const router = Router();
 
@@ -18,5 +19,7 @@ router.route("/login").post([
     body("email").isEmail().withMessage("Email is Required"),
     body("password").isLength({min : 3}).withMessage("Password must be atleast 3 characters long."),
 ] , loginCaptain);
+
+router.route("/logout").get(authCaptain , logoutCaptain);
 
 export default router;
