@@ -230,7 +230,7 @@ Endpoint to logout user and clear authentication tokens.
 
 - **URL**: `/api/users/logout`
 - **Method**: `GET`
-- **Auth required**: Yes
+- **Auth required**: `Yes`
 
 #### Headers
 ```json
