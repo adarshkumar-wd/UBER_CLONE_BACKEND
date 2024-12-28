@@ -160,3 +160,143 @@ Status Code: 400 Internal Server Error
     "success": false
 }
 ```
+
+## Refresh Access Token API
+
+Endpoint for refreshing the access token using a valid refresh token.
+
+### Endpoint Details
+
+- **URL**: `/api/users/refresh-token`
+- **Method**: `POST`
+- **Content**-Type: `application/json`
+
+```json
+
+Request Body
+{
+    "refreshToken": "refresh_token" // Required
+}
+
+Success Response
+Status Code: 200 OK
+
+{
+    "statusCode": 200,
+    "data": {
+        "accessToken": "new_access_token",
+        "refreshToken": "new_refresh_token"
+    },
+    "message": "Tokens Generated Successfully.",
+    "success": true
+}
+
+Error Responses
+Tokens Not Found
+Status Code: 401 Unauthorized
+{
+    "statusCode": 401,
+    "data": null,
+    "message": "Tokens Not Found.",
+    "success": false
+}
+Invalid Token
+Status Code: 402 Payment Required
+{
+    "statusCode": 402,
+    "data": null,
+    "message": "Invalid Token.",
+    "success": false
+}
+Invalid User
+Status Code: 402 Payment Required
+{
+    "statusCode": 402,
+    "data": null,
+    "message": "Invalid User Found.",
+    "success": false
+}
+Server Error
+{
+    "statusCode": 500,
+    "data": null,
+    "message": "Something went wrong while generating the tokens.",
+    "success": false
+}
+```
+
+### Logout User
+Endpoint to logout user and clear authentication tokens.
+
+**URL**: `/api/users/logout`
+**Method**: `GET`
+**Auth required**: Yes
+
+#### Headers
+```json
+{
+    "Authorization": "Bearer <accessToken>"
+}
+
+Success Response
+Code: 200 OK
+
+{
+    "statusCode": 200,
+    "data": {},
+    "message": "User Logged Out Successfully.",
+    "success": true
+}
+
+Error Response
+Code: 401 Unauthorized
+
+{
+    "statusCode": 401,
+    "data": null, 
+    "message": "UnAuthorized User.",
+    "success": false
+}
+```
+
+### Get User Profile
+
+Endpoint to fetch authenticated user's profile information.
+
+- **URL** : `/api/users/profile` 
+- **Method** : `GET Auth required: Yes`
+
+### Headers
+```json
+
+{
+    "Authorization": "Bearer <accessToken>"
+}
+
+Success Response
+Code: 200 OK
+
+{
+    "statusCode": 200,
+    "data": {
+        "user": {
+            "_id": "userId",
+            "firstName": "John",
+            "lastName": "Doe", 
+            "email": "john@example.com",
+            "socketId": null
+        }
+    },
+    "message": "User Profile Data.",
+    "success": true
+}
+
+Error Response
+Code: 401 Unauthorized
+
+{
+    "statusCode": 401,
+    "data": null,
+    "message": "UnAuthorized User.",
+    "success": false
+}
