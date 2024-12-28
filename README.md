@@ -169,7 +169,7 @@ Endpoint for refreshing the access token using a valid refresh token.
 
 - **URL**: `/api/users/refresh-token`
 - **Method**: `POST`
-- **Content**-Type: `application/json`
+- **Content-Type**: `application/json`
 
 ```json
 
@@ -228,9 +228,9 @@ Server Error
 ### Logout User
 Endpoint to logout user and clear authentication tokens.
 
-**URL**: `/api/users/logout`
-**Method**: `GET`
-**Auth required**: Yes
+- **URL**: `/api/users/logout`
+- **Method**: `GET`
+- **Auth required**: Yes
 
 #### Headers
 ```json
@@ -264,7 +264,8 @@ Code: 401 Unauthorized
 Endpoint to fetch authenticated user's profile information.
 
 - **URL** : `/api/users/profile` 
-- **Method** : `GET Auth required: Yes`
+- **Method** : `GET`
+- **Auth required** : `Yes`
 
 ### Headers
 ```json
