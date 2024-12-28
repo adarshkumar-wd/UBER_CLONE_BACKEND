@@ -5,6 +5,7 @@ import { generateAccessAndRefreshToken } from "../utils/generateTokens.js";
 import { validationResult } from "express-validator";
 import { captainModel } from "../models/captain.model.js";
 import { generateCaptainAccessAndRefreshToken } from "../utils/generateCaptainTokens.js";
+import jwt from "jsonwebtoken";
 
 const registerCaptain = asyncHandler(async (req , res) => {
 
@@ -130,7 +131,64 @@ const loginCaptain = asyncHandler(async (req , res) => {
     
 });
 
+const refreshAccessToken = asyncHandler(async (req , res) => {
+
+    const token = req.cookies.refreshToken || req.header.Authorization.split(" ")[1];
+
+    if (!token) {
+        throw new ApiError(404 , "Token not found.");
+    }
+
+    try {
+
+        const decodedToken = jwt.verify(token, process.env.CAPTAIN_REFRESH_TOKEN_SECRET);
+
+        if (!decodedToken) {
+            throw new ApiError(401 , "Please Enter Valid Token.");
+        }
+
+        const captain = await captainModel.findById(decodedToken._id);
+
+        if (!captain) {
+            throw new ApiError(401 , "Incorrect Token.");
+        }
+
+        if (token !== captain.refreshToken) {
+            throw new ApiError(401 , "Invalid Token.");
+        }
+
+        const {accessToken , refreshToken : newRefreshToken} = await generateCaptainAccessAndRefreshToken(captain._id);
+
+        if (!accessToken || !newRefreshToken) {
+            throw new ApiError(500 , "Something went wrong while generating the tokens.");
+        }
+
+        captain.refreshToken = newRefreshToken;
+
+        return res
+           .status(200)
+           .cookie("accessToken" , accessToken , options)
+           .cookie("refreshToken" , newRefreshToken , options)
+           .json(
+            new ApiResponse(
+                200,
+                {
+                    captain,
+                    accessToken,
+                    refreshToken : newRefreshToken
+                },
+                "Token Refreshed Successfully."
+            )
+           )
+        
+    } catch (error) {
+        throw new ApiError(500 , error.message || "Token Refresh Failed.");
+    }
+
+});
+
 export {
     registerCaptain,
-    loginCaptain
+    loginCaptain,
+    refreshAccessToken
 };
