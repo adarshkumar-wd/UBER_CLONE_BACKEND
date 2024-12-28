@@ -301,3 +301,164 @@ Code: 401 Unauthorized
     "message": "UnAuthorized User.",
     "success": false
 }
+```
+
+## Captain APIs
+
+### Register Captain
+Creates a new captain account.
+
+**URL**: `/api/captains/captain-register`
+**Method**: `POST`
+**Content-Type**: `application/json`
+
+#### Request Body
+```json
+{
+    "fullName": {
+        "firstName": "John",    // Required
+        "lastName": "Doe"       // Optional
+    },
+    "email": "john@example.com", // Required
+    "password": "password123",   // Required, min 3 chars
+    "vechile": {
+        "color": "Black",       // Required
+        "vechileNumber": "ABC123", // Required
+        "capacity": 4,          // Required
+        "vechileType": "Sedan"  // Required
+    }
+}
+
+Success Response
+Code: 201 Created
+
+{
+    "statusCode": 200,
+    "data": {
+        "_id": "captainId",
+        "fullName": {
+            "firstName": "John",
+            "lastName": "Doe"
+        },
+        "email": "john@example.com",
+        "vechile": {
+            "color": "Black",
+            "vechileNumber": "ABC123",
+            "capacity": 4,
+            "vechileType": "Sedan"
+        }
+    },
+    "message": "Captain Registered Successfully.",
+    "success": true
+}
+```
+
+### Login Captain
+
+Authenticates a captain.
+
+- **URL** :` /api/captains/captain-login`
+- **Method** : `POST`
+
+### Request Body
+
+```json
+
+{
+    "email": "john@example.com",
+    "password": "password123"
+}
+
+Success Response
+Code: 200 OK
+
+{
+    "statusCode": 200,
+    "data": {
+        "captainData": {
+            "_id": "captainId",
+            "fullName": {},
+            "email": "john@example.com",
+            "vechile": {}
+        },
+        "accessToken": "jwt_access_token",
+        "refreshToken": "jwt_refresh_token"
+    },
+    "message": "Captain Login Successfully.",
+    "success": true
+}
+```
+### Refresh Access Token
+
+Generates new access token using refresh token.
+
+- **URL**: `/api/captains/refresh-token`
+-  **Method** : `POST`
+
+### Request
+Requires refresh token in cookies or Authorization header.
+
+### Success Response
+**Code**: `200 OK`
+
+```json
+
+{
+    "statusCode": 200,
+    "data": {
+        "accessToken": "new_access_token",
+        "refreshToken": "new_refresh_token"
+    },
+    "message": "Token Refreshed Successfully.",
+    "success": true
+}
+```
+### Logout Captain
+
+Logs out captain and invalidates tokens.
+
+- **URL** : `/api/captains/captain-logout`
+- **Method** : `GET` 
+- **Auth required** : `Yes`
+
+Success Response
+- **Code**: `200 OK`
+
+```json
+
+{
+    "statusCode": 200,
+    "data": {},
+    "message": "Captain Logged Out Successfully.",
+    "success": true
+}
+```
+### Get Captain Profile
+
+Fetches authenticated captain's profile.
+
+- **URL**: `/api/captains/captain-profile`
+- **Method** : `GET` 
+- **Auth required** : `Yes`
+
+Success Response
+- **Code**: `200 OK`
+
+```json
+
+{
+    "statusCode": 200,
+    "data": {
+        "captainData": {
+            "_id": "captainId",
+            "fullName": {},
+            "email": "john@example.com",
+            "vechile": {}
+        },
+        "accessToken": "jwt_access_token",
+        "refreshToken": "jwt_refresh_token"
+    },
+    "message": "Captain profile fetched Successfully.",
+    "success": true
+}
+```

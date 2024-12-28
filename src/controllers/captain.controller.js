@@ -216,9 +216,29 @@ const logoutCaptain = asyncHandler(async (req , res) => {
 
 });
 
+const captainProfile = asyncHandler(async (req , res) => {
+    
+    const captain = req?.captain;
+
+    if (!captain) {
+        throw new ApiError(401 , "unAuthorized Captain.");
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                captain,
+                "Captain Profile."
+            )
+        )
+});
+
 export {
     registerCaptain,
     loginCaptain,
     refreshAccessToken,
-    logoutCaptain
+    logoutCaptain,
+    captainProfile
 };
