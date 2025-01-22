@@ -4,19 +4,20 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import {ApiError} from "../utils/ApiError.js"
 import { generateAccessAndRefreshToken } from "../utils/generateTokens.js";
 import jwt from "jsonwebtoken"
+import { json } from "express";
 
 const registerUser = asyncHandler(async (req , res) => {
 
     const {firstName , lastName , email , password} = req.body;
 
     if (!firstName || !email || !password) {
-        throw new ApiError(400 , "Star Marked fields must be required.")
+        return res.status(400).json({success : false , message : "All fields are required except lastname"})
     }
 
     const emailCheck = await userModel.findOne({email});
 
     if (emailCheck) {
-        throw new ApiError(400 , "Email Already Exist")
+        return res.status(400).json({success : false , message : "Email Already Exist"})
     } 
 
     const user = await userModel.create({
@@ -27,20 +28,30 @@ const registerUser = asyncHandler(async (req , res) => {
     });
 
     if (!user) {
-        throw new ApiError(500 , "Something went wrong while creating the user.");
+        return res.status(500).json({success : false , message : "Server error while creating the user"})
     }
 
-    const userData = await userModel.findOne({"_id" : user._id}).select("-password");
+    const {accessToken , refreshToken} = await generateAccessAndRefreshToken(user._id)
+
+    const userData = await userModel.findOne({"_id" : user._id}).select("-password -refreshToken");
 
     if (!userData) {
-        throw new ApiError(500 , "User Data not found in the Database.");
+        return res.status(404).json({success : false , message : "User not found in database"})
+    }
+
+    const options = {
+        httpOnly : true,
+        secure : false,
+        sameSite: "Lax"
     }
 
     return res
+    .cookie("accessToken" , accessToken , options)
+    .cookie("refreshToken" , refreshToken , options)
     .status(201)
     .json(
         new ApiResponse(
-            200,
+            201,
             {userData},
             "User Created Sucessfully.."
         )
@@ -54,36 +65,37 @@ const loginUser = asyncHandler(async (req , res) => {
     const {email , password} = req.body
 
     if (!email || !password) {
-        throw new ApiError(400 , "All fields are Required.");
+        return res.status(400).json({success : false , message : "All fields are required"})
     }
 
     const user = await userModel.findOne({email});
 
     if (!user) {
-        throw new ApiError(404 , "User Not Found.");
+        return res.status(404).json({success : false , message : "Email does't exised"})
     }
 
     const isPasswordCorrect = await user.isPasswordCorrect(password);
 
     if (!isPasswordCorrect) {
-        throw new ApiError(400 , "Invalid Credentials.");
+        return res.status(400).json({success : false , message : "Invalid credentials"})
     }
 
     const {accessToken , refreshToken} = await generateAccessAndRefreshToken(user._id);
 
     if (!accessToken || !refreshToken) {
-        throw new ApiError(500 , "Error While Generating Tokens.");
+        return res.status(500).json({success : false , message : "Server error while generating user tokens"})
     }
 
     const userData = await userModel.findOne({"_id" : user._id}).select("-password -refreshToken");
 
     if (!userData) {
-        throw new ApiError(500 , "User Data not found in the Database.");
+        return res.status(404).json({success : false , message : "User not found"})
     }
 
     const option = {
         httpOnly : true,
-        secure : process.env.NODE_ENV === "production",
+        secure : false,
+        sameSite: "Lax"
     }
 
     return res
@@ -174,14 +186,14 @@ const logoutUser = asyncHandler(async (req , res) => {
     const user = req?.user;
 
     if (!user) {
-        throw new ApiError(401 , "UnAuthorized User.");
+        return res.status(400).json({success : false , message : "unAuthorised User"})
     }
 
     user.refreshToken = undefined;
     user.save({validateBeforeSave : false});
     const option = {
         httpOnly : true,
-        secure : process.env.NODE_ENV === "production",
+        secure : false,
     }
 
     return res
@@ -198,12 +210,46 @@ const logoutUser = asyncHandler(async (req , res) => {
 
 });
 
+const validateUserToken = asyncHandler(async (req , res) => {
+    const token = req.cookies?.accessToken;
+
+    if(!token){
+        return res.status(400).json({success : false , message : "unAuthorised user"})
+    }
+
+    try {
+        const decoded = jwt.verify(token , process.env.USER_ACCESS_TOKEN_SECRET);
+
+        if (!decoded) {
+            return res.status(500).json({success : false , message : "Not Authorized to access this route."})
+        }
+
+        const user = await userModel.findById(decoded?._id).select("-password -refreshToken");
+
+        if (!user) {
+            return res.status(400).json({success : false , message : "Invalid Tokens"})
+        }
+    } catch (error) {
+        return res.status(500).json({success : false , message : "unAuthorised user"})
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+            200,
+            {},
+            "Authenticates User"
+        )
+      )
+});
+
 const userProfile = asyncHandler(async (req , res) => {
     
     const user = req?.user;
 
     if (!user) {
-        throw new ApiError(401 , "UnAuthorized User.");
+        return res.status(400).json({success : false , message : "unAuthorised user"})
     }
 
     return res
@@ -224,5 +270,6 @@ export {
     loginUser,
     refreshAccessToken,
     logoutUser,
-    userProfile
+    userProfile,
+    validateUserToken
 }

@@ -29,7 +29,7 @@ const captainsSchema = new mongoose.Schema({
     password: {
         type : String,
         required : [true , "Password is Required."],
-        minlength : [8 , "Password must be atleast 8 characters long."],
+        minlength : [3 , "Password must be atleast 3 characters long."],
     },
 
     refreshToken: {

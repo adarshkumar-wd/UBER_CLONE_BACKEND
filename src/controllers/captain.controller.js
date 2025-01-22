@@ -1,7 +1,6 @@
 import { asyncHandler } from "../asyncHandler/asyncsHandler.js";
 import {ApiResponse} from "../utils/apiResponse.js";
 import {ApiError} from "../utils/ApiError.js";
-import { generateAccessAndRefreshToken } from "../utils/generateTokens.js";
 import { validationResult } from "express-validator";
 import { captainModel } from "../models/captain.model.js";
 import { generateCaptainAccessAndRefreshToken } from "../utils/generateCaptainTokens.js";
@@ -12,7 +11,7 @@ const registerCaptain = asyncHandler(async (req , res) => {
     const error = validationResult(req);
 
     if (!error.isEmpty()) {
-        throw new ApiError(400 , "Please provide valid data.");
+        return res.status(400).json({success : false , message : "please provide Valid data"})
     }
 
     try {
@@ -20,13 +19,13 @@ const registerCaptain = asyncHandler(async (req , res) => {
         const {fullName , email , password , vechile} = req.body;
 
         if (!fullName.firstName || !email || !password || !vechile.color || !vechile.capacity || !vechile.vechileNumber || !vechile.vechileType) {
-            throw new ApiError(400 , "Please provide all the required fields.");
+            return res.status(400).json({success : false , message : "Please provide all requires fields."})
         }
 
         const existCaptain = await captainModel.findOne({email});
 
         if (existCaptain) {
-            throw new ApiError(400 , "Captain Already Exist , with this email.");
+            return res.status(500).json({success : false , message : "Capain already exist"})
         }
 
         const captain = await captainModel.create({
@@ -37,16 +36,30 @@ const registerCaptain = asyncHandler(async (req , res) => {
         });
 
         if (!captain) {
-            throw new ApiError(500 , "Something went wrong while creating the user.");
+            return res.status(500).json({success : false , message : "Server error while creating the user"})
         }
 
-        const captainData = await captainModel.findById(captain._id).select("-password");
+        const {accessToken , refreshToken} = await generateCaptainAccessAndRefreshToken(captain._id)
+
+        if (!accessToken || !refreshToken) {
+            return res.status(500).json({success : false , message : "Server error while generating the tokens"})
+        }
+
+        const captainData = await captainModel.findById(captain._id).select("-password -refreshToken");
 
         if (!captainData) {
-            throw new ApiError(400 , "User Data not Found.");
+            return res.status(404).json({success : false , message : "Captain not found"})
+        }
+
+        const options = {
+            httpOnly : true,
+            secure : false,
+            sameSite : "Lax"
         }
 
         return res
+            .cookie("accessToken" , accessToken , options)
+            .cookie("refreshToken" , refreshToken , options)
             .status(201)
             .json(
                 new ApiResponse(
@@ -57,8 +70,7 @@ const registerCaptain = asyncHandler(async (req , res) => {
             )
         
     } catch (error) {
-        console.log("hloo--------- ",error.message);
-        throw new ApiError(500 , "User Registration Failed.");
+        throw new ApiError(500 , error.message);
     }
 });
 
@@ -67,7 +79,7 @@ const loginCaptain = asyncHandler(async (req , res) => {
     const error = validationResult(req);
 
     if (!error.isEmpty()) {
-        throw new ApiError(400 , "Please provide valid data.");
+        return res.status(400).json({success : false , message : "please provide Valid data"})
     }
 
     try {
@@ -75,26 +87,26 @@ const loginCaptain = asyncHandler(async (req , res) => {
         const {email , password} = req.body;
 
         if (!email || !password) {
-            throw new ApiError(400 , "Please provide all the required fields.");
+            return res.status(500).json({success : false , message : "please provide all requires fields.."})
             
         }
 
         const captain = await captainModel.findOne({email});
 
         if (!captain) {
-            throw new ApiError(400 , "Captain not found with this email.");
+           return res.status(500).json({success : false , message : "Email does't exist"})
         }
 
         const passwordMatch = await captain.isPasswordCorrect(password);
 
         if (!passwordMatch) {
-            throw new ApiError(400 , "Password is Incorrect.");
+            return res.status(400).json({success : false , message : "password is incorrect"})
         }
 
         const {accessToken , refreshToken} = await generateCaptainAccessAndRefreshToken(captain._id);
 
         if (!accessToken || !refreshToken) {
-            throw new ApiError(500 , "Something went wrong while generating the tokens.");
+            return res.status(500).json({success : false , message : "server error in generating tokens"})
         }
 
         const options = {
@@ -192,7 +204,7 @@ const logoutCaptain = asyncHandler(async (req , res) => {
     const captain = req?.captain ;
 
     if (!captain) {
-        throw new ApiError(401 , "unAuthorized captain.");
+        return res.status(400).json({success : false , message : "unAuthorised Captain"})
     }
 
     captain.refreshToken = undefined;
@@ -216,12 +228,49 @@ const logoutCaptain = asyncHandler(async (req , res) => {
 
 });
 
+const validateCaptainToken = asyncHandler(async (req , res) => {
+
+    
+    const token = req.cookies?.accessToken
+
+    if (!token) {
+        return res.status(400).json({success : false , message : "un Authorised captain"})
+    }
+    try {
+        const decoded = jwt.verify(token , process.env.CAPTAIN_ACCESS_TOKEN_SECRET);
+
+        if(!decoded){
+            // return res.status(401).json(new ApiResponse(401, {}, "Not Authorized to access this route."));
+            return res.status(400).json({success : false , message : "Incorrect tokens"})
+        }
+
+        const captain = await captainModel.find({_id : decoded._id}).select("-password -refreshToken");
+
+        if(!captain){
+            return res.status(404).json({success : false , message : "Captain not found with given token"})
+        }
+
+    } catch (error) {
+        throw new ApiError(401 , error.message || "unAuthorised Captain")
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiError(
+            200,
+            {},
+            "Valide User Accessed"
+        )
+      )
+})
+
 const captainProfile = asyncHandler(async (req , res) => {
     
     const captain = req?.captain;
 
     if (!captain) {
-        throw new ApiError(401 , "unAuthorized Captain.");
+        return res.status(400).json({success : false , message : "unAuthorised captain"})
     }
 
     return res
@@ -240,5 +289,6 @@ export {
     loginCaptain,
     refreshAccessToken,
     logoutCaptain,
-    captainProfile
+    captainProfile,
+    validateCaptainToken
 };
