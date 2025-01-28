@@ -20,11 +20,13 @@ app.use(cookieParser())
 
 import userRouter from "./src/routes/user.route.js"
 import captainRouter from "./src/routes/captain.route.js"
+import mapRouter from "./src/routes/map.route.js"
 
 // Routes Decleration... 
 
 app.use("/api/v1/users" , userRouter);
 app.use("/api/v1/captains" , captainRouter);
+app.use("/api/v1/maps" , mapRouter)
 
 
 app.get("/" , (req , res) => res.send("Hello world"));
